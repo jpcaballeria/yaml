@@ -1,0 +1,157 @@
+# --- 1. Segredos para o Banco de Dados ---
+# Armazena as senhas do MySQL de forma segura.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mysql-secrets-curso-python
+type: Opaque
+stringData:
+  MYSQL_ROOT_PASSWORD: "uH7wr5LKuthZuvnYI7oT"
+  MYSQL_DATABASE: "mysql-service-curso-python"
+  MYSQL_USER: "curso-python"
+  MYSQL_PASSWORD: "uH7wr5LKuthZuvnYI7oT"
+
+---
+# --- 2. Volume Persistente para o Banco de Dados ---
+# Cria um volume persistente usando um diretório no nó.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mysql-pv
+spec:
+  capacity:
+    storage: 5Gi # Tamanho do volume
+  accessModes:
+    - ReadWriteOnce # Pode ser montado por um único nó
+  hostPath:
+    path: "/mnt/data/mysql-curso-python" # Diretório no nó vps54480 que armazenará os dados
+
+---
+# --- 3. Solicitação de Volume Persistente ---
+# O Deployment do MySQL usará esta solicitação para se conectar ao PersistentVolume.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+
+---
+# --- 4. Deployment para o MySQL ---
+# Cria e gerencia o pod do banco de dados.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      # Força o pod a rodar no nó especificado.
+      nodeSelector:
+        kubernetes.io/hostname: vps54480
+      containers:
+      - name: mysql
+        image: mysql:8.0
+        envFrom:
+        - secretRef:
+            name: mysql-secrets-curso-python
+         # Carrega todas as senhas do Secret
+        ports:
+        - containerPort: 3306
+        volumeMounts:
+        - name: mysql-persistent-storage
+          mountPath: /var/lib/mysql
+      volumes:
+      - name: mysql-persistent-storage
+        persistentVolumeClaim:
+          claimName: mysql-pvc
+
+---
+# --- 5. Serviço para o MySQL ---
+# Cria um nome de DNS interno (mysql-service) para que a aplicação PHP possa se conectar.
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-service-curso-python
+spec:
+  selector:
+    app: mysql
+  ports:
+    - protocol: TCP
+      port: 3306
+      targetPort: 3306
+
+---
+# --- 6. Deployment para a Aplicação (Nginx + PHP) ---
+# Cria um único Pod com dois contêineres que compartilham os mesmos volumes.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: curso-python-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: curso-python
+  template:
+    metadata:
+      labels:
+        app: curso-python
+    spec:
+      # Força o pod a rodar no nó especificado.
+      nodeSelector:
+        kubernetes.io/hostname: vps54480
+      volumes:
+        # Volume para o código da aplicação
+        - name: app-code
+          hostPath:
+            path: /home/saas/curso-python/app
+        # Volume para a configuração do Nginx
+        - name: nginx-config
+          hostPath:
+            path: /home/saas/curso-python/nginx.conf
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: app-code
+          mountPath: /var/www/html
+        - name: nginx-config
+          mountPath: /etc/nginx/conf.d/default.conf
+          readOnly: true
+      - name: php
+        # ⚠️ SUBSTITUA PELA SUA IMAGEM PHP CONSTRUÍDA E ENVIADA PARA UM REGISTRO ⚠️
+        image: jpcaballeria/php-build:latest
+        volumeMounts:
+        - name: app-code
+          mountPath: /var/www/html
+
+---
+# --- 7. Serviço para a Aplicação ---
+# Expõe a porta 80 do Nginx para fora do cluster através de uma porta no nó.
+apiVersion: v1
+kind: Service
+metadata:
+  name: curso-python-service
+spec:
+  type: NodePort # Expõe o serviço em uma porta estática em cada nó.
+  selector:
+    app: curso-python
+  ports:
+    - protocol: TCP
+      port: 80 # Porta interna do serviço
+      targetPort: 80 # Porta do contêiner Nginx
+      # nodePort: 30080 # Opcional: Especifique uma porta. Se omitido, o K8s escolhe uma.

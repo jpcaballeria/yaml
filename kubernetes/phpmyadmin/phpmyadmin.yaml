@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: phpmyadmin-deployment
+  labels:
+    app: phpmyadmin
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: phpmyadmin
+  template:
+    metadata:
+      labels:
+        app: phpmyadmin
+    spec:
+      containers:
+      - name: phpmyadmin
+        image: phpmyadmin/phpmyadmin
+        ports:
+        - containerPort: 80
+        env:
+        # A variável PMA_HOSTS é configurada com os nomes dos Serviços Kubernetes
+        # dos seus bancos de dados. Corrigi o segundo nome para 'mysql-service'
+        # que foi o que criamos para a aplicação curso-python.
+        - name: PMA_HOSTS
+          value: "app1-mysql-service,mysql-service-curso-python,fundorotativo.mysql.dbaas.com.br"
+        - name: PMA_PORT
+          value: "3306" # Porta padrão do MySQL
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: phpmyadmin-service
+spec:
+  # O tipo NodePort expõe o serviço em uma porta estática em cada nó do cluster.
+  type: NodePort
+  selector:
+    # Este seletor conecta o serviço aos pods criados pelo Deployment acima.
+    app: phpmyadmin
+  ports:
+    - protocol: TCP
+      # Porta interna do serviço no cluster
+      port: 80
+      # Porta onde o contêiner do phpMyAdmin está escutando
+      targetPort: 80
+      # Porta que será exposta em cada nó. Similar ao 8082 que você usava.
+      # Se esta porta estiver ocupada, você pode omitir esta linha e o K8s escolherá uma aleatória.
+      nodePort: 30082

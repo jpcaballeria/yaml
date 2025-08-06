@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-tunnel-deployment
+  labels:
+    app: app-tunnel
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app-tunnel
+  template:
+    metadata:
+      labels:
+        app: app-tunnel
+    spec:
+      # Esta seção força o pod a ser agendado apenas no nó especificado.
+      nodeSelector:
+        kubernetes.io/hostname: vps60583
+      containers:
+      - name: app-tunnel-container
+        image: cloudflare/cloudflared:latest
+        # O 'command' do Docker Compose é traduzido para 'args' no Kubernetes.
+        args:
+        - "tunnel"
+        - "--no-autoupdate"
+        - "run"
+        - "--token"
+        - "eyJhIjoiYmQ1MjlhOTJkMGZjYzQ4MTc5ZmRkZDE5YTZiYWViZTUiLCJ0IjoiNGU4NDU3NDMtYmU0Yy00NWQ0LWFlZmUtNjFiZTNmZGI0MTgxIiwicyI6IlkySTBZV0kwWWpJdE9XUTRPQzAwWXpCbUxUa3pOR1F0T1dNNU9UUXpZamRsWWpjMCJ9"
