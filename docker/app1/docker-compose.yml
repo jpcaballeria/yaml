@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  app1_nginx:
+    image: nginx:latest
+    container_name: app1_nginx
+    restart: unless-stopped
+    volumes:
+      - /home/saas/app1/app:/var/www/html
+      - /home/saas/app1/nginx.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - saas_net
+
+  app1_php:
+    build: /home/compose/php_config
+    container_name: app1_php
+    restart: unless-stopped
+    volumes:
+      - /home/saas/app1/app:/var/www/html
+    networks:
+      - saas_net
+
+  app1_db:
+    image: mysql:8.0
+    container_name: app1_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: "C4b4lleri42024@"
+      MYSQL_DATABASE: "saas_app1"
+      MYSQL_USER: "app1"
+      MYSQL_PASSWORD: "C4b4lleri42024@"
+    volumes:
+      - app1_db_data:/var/lib/mysql
+    networks:
+      - saas_net
+
+networks:
+  saas_net:
+    name: saas_net
+    external: true
+
+volumes:
+  app1_db_data:

@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
+    environment:
+      # 1. Lista dos nomes dos seus containers de banco de dados
+      PMA_HOSTS: 'app1_db,curso-python_db,fundo-rotativo_db'
+      
+      # (Opcional) Nomes amigáveis para cada servidor na interface do phpMyAdmin
+      PMA_VERBOSES: 'App 1,Curso Python,Fundo Rotativo'
+
+      # 2. Lista de usuários para cada banco de dados, na mesma ordem dos hosts
+      #    Estou usando 'root' para todos, como no seu exemplo de erro.
+      PMA_USERS: 'root,root,root'
+
+      # 3. Lista de senhas para cada usuário, na mesma ordem.
+      #    !! IMPORTANTE: Substitua pelas senhas reais !!
+      PMA_PASSWORDS: 'SUA_SENHA_DO_app1_db,SUA_SENHA_DO_curso-python_db,SUA_SENHA_DO_fundo-rotativo_db'
+
+    ports:
+      # Estou usando a porta 8082, como na sua imagem, mas ajuste se necessário.
+      - "8082:80" 
+    networks:
+      - saas_net
+
+networks:
+  saas_net:
+    external: true

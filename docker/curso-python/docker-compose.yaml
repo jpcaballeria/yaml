@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  curso-python_nginx:
+    image: nginx:latest
+    container_name: curso-python_nginx
+    restart: unless-stopped
+    volumes:
+      - /home/saas/curso-python/app:/var/www/html
+      - /home/saas/curso-python/nginx.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - saas_net
+
+  curso-python_php:
+    build: /home/compose/php_config
+    container_name: curso-python_php
+    restart: unless-stopped
+    volumes:
+      - /home/saas/curso-python/app:/var/www/html
+    networks:
+      - saas_net
+
+  curso-python_db:
+    image: mysql:8.0
+    container_name: curso-python_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: "uH7wr5LKuthZuvnYI7oT"
+      MYSQL_DATABASE: "saas_curso-python"
+      MYSQL_USER: "curso-python"
+      MYSQL_PASSWORD: "uH7wr5LKuthZuvnYI7oT"
+    volumes:
+      - curso-python_db_data:/var/lib/mysql
+    networks:
+      - saas_net
+
+networks:
+  saas_net:
+    name: saas_net
+    external: true
+
+volumes:
+  curso-python_db_data:

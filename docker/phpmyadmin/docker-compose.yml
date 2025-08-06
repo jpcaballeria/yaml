@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
+    environment:
+      # Lista dos nomes dos seus containers de banco de dados, separados por vírgula.
+      PMA_HOSTS: 'app1_db,curso-python_db,fundo-rotativo_db'
+      # PMA_HOSTS_SEPARATOR: ',' # Esta é a opção padrão, mas você pode usar outro separador se quiser.
+      
+      # Usuário e senha padrão que o phpMyAdmin vai usar.
+      # Se as senhas dos seus bancos de dados forem diferentes,
+      # é melhor deixar estas variáveis em branco e fazer login manualmente.
+      #PMA_USER: 'root'
+      #PMA_PASSWORD: 'C4b4lleri42024@'
+
+    ports:
+      - "8082:80"
+    networks:
+      - saas_net
+
+networks:
+  saas_net:
+    external: true

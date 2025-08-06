@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  app_tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: app_tunnel
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run --token eyJhIjoiYmQ1MjlhOTJkMGZjYzQ4MTc5ZmRkZDE5YTZiYWViZTUiLCJ0IjoiOTZhZGI1NzQtNzkzYi00NGUyLWI2ZTEtMmQ3MDRjZTQ0MmFkIiwicyI6Ik1qSTBaRE0zWldNdE1tUmxNeTAwWWpJd0xUZzFZVEF0TTJRNE1HUTFOamt5WlRKbCJ9
+    networks:
+      - saas_net
+
+networks:
+  saas_net:
+    driver: bridge
+    name: saas_net

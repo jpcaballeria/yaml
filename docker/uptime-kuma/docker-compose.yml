@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  uptime-kuma:
+    image: louislam/uptime-kuma:1
+    container_name: uptime-kuma
+    volumes:
+      - uptime-kuma:/app/data
+    ports:
+      - "3001:3001"
+    restart: always
+    networks:
+      - saas_net
+
+networks:
+  saas_net:
+    external: true
+
+volumes:
+  uptime-kuma:
+    driver: local
