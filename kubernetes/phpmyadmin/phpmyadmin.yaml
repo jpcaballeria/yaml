@@ -19,6 +19,13 @@ spec:
         image: phpmyadmin/phpmyadmin
         ports:
         - containerPort: 80
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "500m"
         env:
         # A variável PMA_HOSTS é configurada com os nomes dos Serviços Kubernetes
         # dos seus bancos de dados. Corrigi o segundo nome para 'mysql-service'

@@ -69,6 +69,13 @@ spec:
          # Carrega todas as senhas do Secret
         ports:
         - containerPort: 3306
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
         volumeMounts:
         - name: mysql-persistent-storage
           mountPath: /var/lib/mysql
@@ -126,6 +133,13 @@ spec:
         image: nginx:latest
         ports:
         - containerPort: 80
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "128Mi"
+            cpu: "100m"
         volumeMounts:
         - name: app-code
           mountPath: /var/www/html
@@ -135,6 +149,13 @@ spec:
       - name: php
         # ⚠️ SUBSTITUA PELA SUA IMAGEM PHP CONSTRUÍDA E ENVIADA PARA UM REGISTRO ⚠️
         image: jpcaballeria/php-build:latest
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "250m"
         volumeMounts:
         - name: app-code
           mountPath: /var/www/html

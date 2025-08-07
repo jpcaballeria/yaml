@@ -21,6 +21,13 @@ spec:
       - name: app-tunnel-container
         image: cloudflare/cloudflared:latest
         # O 'command' do Docker Compose é traduzido para 'args' no Kubernetes.
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "256Mi"
         args:
         - "tunnel"
         - "--no-autoupdate"
