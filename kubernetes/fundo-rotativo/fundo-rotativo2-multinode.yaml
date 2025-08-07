@@ -1,6 +1,93 @@
 # Arquivo: fundo-rotativo2-multinode.yaml
 # Deployment configurado para rodar em qualquer node (após sincronização)
 
+# --- 1. Segredos para o Banco de Dados (fundo-rotativo) ---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: fundo-rotativo-mysql-secrets
+type: Opaque
+stringData:
+  MYSQL_ROOT_PASSWORD: "C4b4lleri4202@"
+  MYSQL_DATABASE: "fundo-rotativo"
+  MYSQL_USER: "fundorotativo"
+  MYSQL_PASSWORD: "C4b4lleri4202@"
+
+---
+# --- 2. Volume Persistente para o Banco de Dados (fundo-rotativo) ---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: fundo-rotativo-mysql-pv
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/data/mysql-fundo-rotativo"
+
+---
+# --- 3. Solicitação de Volume Persistente (fundo-rotativo) ---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: fundo-rotativo-mysql-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+
+---
+# --- 4. Deployment para o MySQL (fundo-rotativo) ---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fundo-rotativo-mysql-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fundo-rotativo-mysql
+  template:
+    metadata:
+      labels:
+        app: fundo-rotativo-mysql
+    spec:
+      containers:
+      - name: mysql
+        image: mysql:8.0
+        envFrom:
+        - secretRef:
+            name: fundo-rotativo-mysql-secrets
+        ports:
+        - containerPort: 3306
+        volumeMounts:
+        - name: mysql-persistent-storage
+          mountPath: /var/lib/mysql
+      volumes:
+      - name: mysql-persistent-storage
+        persistentVolumeClaim:
+          claimName: fundo-rotativo-mysql-pvc
+
+---
+# --- 5. Serviço para o MySQL (fundo-rotativo) ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fundo-rotativo-mysql-service
+spec:
+  selector:
+    app: fundo-rotativo-mysql
+  ports:
+    - protocol: TCP
+      port: 3306
+      targetPort: 3306
+
+---
+
 # --- Deployment para a Aplicação (fundo-rotativo2) Multi-Node ---
 apiVersion: apps/v1
 kind: Deployment
@@ -103,7 +190,9 @@ spec:
         livenessProbe:
           exec:
             command:
-            - php-fpm-healthcheck
+            - /bin/sh
+            - -c
+            - "ps aux | grep -v grep | grep php-fpm"
           initialDelaySeconds: 30
           periodSeconds: 10
           timeoutSeconds: 5
@@ -111,7 +200,9 @@ spec:
         readinessProbe:
           exec:
             command:
-            - php-fpm-healthcheck
+            - /bin/sh
+            - -c
+            - "ps aux | grep -v grep | grep php-fpm"
           initialDelaySeconds: 5
           periodSeconds: 5
           timeoutSeconds: 3
