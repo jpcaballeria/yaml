@@ -1,0 +1,151 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-blackbox-apps
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+    app.kubernetes.io/name: grafana-dashboards
+  annotations:
+    grafana_folder: Applications
+data:
+  blackbox-apps.json: |
+    {
+      "id": null,
+      "uid": "blackbox-apps",
+      "title": "Apps - HTTP Availability (Blackbox)",
+      "tags": ["apps", "blackbox", "http"],
+      "timezone": "browser",
+      "schemaVersion": 39,
+      "version": 1,
+      "refresh": "30s",
+      "time": { "from": "now-6h", "to": "now" },
+      "templating": {
+        "list": [
+          {
+            "type": "query",
+            "name": "job",
+            "query": "label_values(probe_success{job=~\\"blackbox-http-.*\\"}, job)",
+            "datasource": {"type": "prometheus", "uid": "prometheus"},
+            "refresh": 1,
+            "includeAll": true,
+            "multi": true
+          },
+          {
+            "type": "query",
+            "name": "instance",
+            "query": "label_values(probe_success{job=~\\"$job\\"}, instance)",
+            "datasource": {"type": "prometheus", "uid": "prometheus"},
+            "refresh": 1,
+            "includeAll": true,
+            "multi": true
+          }
+        ]
+      },
+      "panels": [
+        {
+          "type": "stat",
+          "title": "Availability last 5m (%)",
+          "id": 1,
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "targets": [
+            {
+              "expr": "avg_over_time(probe_success{job=~\\"$job\\",instance=~\\"$instance\\"}[5m]) * 100",
+              "legendFormat": "{{job}} {{instance}}"
+            }
+          ],
+          "options": {"reduceOptions": {"calcs": ["lastNotNull"]}},
+          "fieldConfig": {"defaults": {"unit": "percent", "thresholds": {"mode":"absolute","steps":[{"color":"red","value":null},{"color":"yellow","value":95},{"color":"green","value":99.5}]}}}
+        },
+        {
+          "type": "stat",
+          "title": "HTTP p95 latency (s) 5m",
+          "id": 2,
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.95, sum(rate(probe_http_duration_seconds_bucket{job=~\\"$job\\",instance=~\\"$instance\\"}[5m])) by (le))",
+              "legendFormat": "p95"
+            }
+          ],
+          "fieldConfig": {"defaults": {"unit": "s", "thresholds": {"mode":"absolute","steps":[{"color":"green","value":null},{"color":"yellow","value":0.5},{"color":"red","value":1}]}}}
+        },
+        {
+          "type": "timeseries",
+          "title": "HTTP status code",
+          "id": 3,
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "targets": [
+            {"expr": "probe_http_status_code{job=~\\"$job\\",instance=~\\"$instance\\"}", "legendFormat": "{{job}} {{instance}} code"}
+          ],
+          "fieldConfig": {"defaults": {"unit": "short"}}
+        },
+        {
+          "type": "timeseries",
+          "title": "HTTP duration breakdown (avg over 5m)",
+          "id": 4,
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "options": {"legend": {"displayMode": "list"}},
+          "targets": [
+            {"expr": "avg_over_time(probe_http_duration_seconds{job=~\\"$job\\",instance=~\\"$instance\\"}[5m])", "legendFormat": "{{phase}}"}
+          ],
+          "fieldConfig": {"defaults": {"unit": "s"}}
+        },
+        {
+          "type": "table",
+          "title": "Targets",
+          "id": 5,
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "targets": [
+            {"expr": "probe_success{job=~\\"$job\\"}", "legendFormat": "{{instance}}"}
+          ],
+          "options": {"showHeader": true}
+        }
+      ]
+    }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-app-pods
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+    app.kubernetes.io/name: grafana-dashboards
+  annotations:
+    grafana_folder: Applications
+data:
+  app-pods-overview.json: |
+    {
+      "id": null,
+      "uid": "app-pods-overview",
+      "title": "Apps - Pods Overview",
+      "tags": ["apps", "kubernetes"],
+      "timezone": "browser",
+      "schemaVersion": 39,
+      "version": 1,
+      "refresh": "30s",
+      "time": { "from": "now-6h", "to": "now" },
+      "templating": {
+        "list": [
+          {"type":"query","name":"namespace","datasource":{"type":"prometheus","uid":"prometheus"},"query":"label_values(kube_pod_info, namespace)","refresh":1},
+          {"type":"query","name":"app","datasource":{"type":"prometheus","uid":"prometheus"},"query":"label_values(kube_pod_labels{namespace=~\\"$namespace\\"}, label_app)","refresh":1,"includeAll":true,"multi":true}
+        ]
+      },
+      "panels": [
+        {"type":"timeseries","title":"CPU usage (cores) by pod","id":11,"datasource":{"type":"prometheus","uid":"prometheus"},
+          "targets":[{"expr":"rate(container_cpu_usage_seconds_total{namespace=~\\"$namespace\\",container!=\\"\\",image!=\\"\\"}[5m]) * on(pod,namespace) group_left(label_app) kube_pod_labels{namespace=~\\"$namespace\\",label_app=~\\"$app\\"}","legendFormat":"{{pod}}"}],
+          "fieldConfig":{"defaults":{"unit":"cores"}}
+        },
+        {"type":"timeseries","title":"Memory working set (MiB) by pod","id":12,"datasource":{"type":"prometheus","uid":"prometheus"},
+          "targets":[{"expr":"container_memory_working_set_bytes{namespace=~\\"$namespace\\",container!=\\"\\",image!=\\"\\"} * on(pod,namespace) group_left(label_app) kube_pod_labels{namespace=~\\"$namespace\\",label_app=~\\"$app\\"}","legendFormat":"{{pod}}"}],
+          "fieldConfig":{"defaults":{"unit":"MiB","decimals":0},"overrides":[{"matcher":{"id":"byName","options":"Value"},"properties":[{"id":"unit","value":"MiB"}]}]}
+        },
+        {"type":"stat","title":"Restarts last 1h","id":13,"datasource":{"type":"prometheus","uid":"prometheus"},
+          "targets":[{"expr":"sum by (pod) (increase(kube_pod_container_status_restarts_total{namespace=~\\"$namespace\\"}[1h]) * on(pod,namespace) group_left(label_app) kube_pod_labels{namespace=~\\"$namespace\\",label_app=~\\"$app\\"})","legendFormat":"{{pod}}"}]
+        },
+        {"type":"timeseries","title":"Pod readiness","id":14,"datasource":{"type":"prometheus","uid":"prometheus"},
+          "targets":[{"expr":"kube_pod_status_ready{namespace=~\\"$namespace\\",condition=\\"true\\"} * on(pod,namespace) group_left(label_app) kube_pod_labels{namespace=~\\"$namespace\\",label_app=~\\"$app\\"}","legendFormat":"{{pod}}"}]
+        }
+      ]
+    }

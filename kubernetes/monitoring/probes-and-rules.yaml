@@ -1,0 +1,78 @@
+apiVersion: monitoring.coreos.com/v1
+kind: Probe
+metadata:
+  name: probe-curso-python
+  namespace: monitoring
+  labels:
+    release: prometheus
+spec:
+  jobName: blackbox-http-curso-python
+  prober:
+    url: blackbox-exporter.monitoring.svc:9115
+  module: http_2xx
+  targets:
+    staticConfig:
+      static:
+      - http://curso-python-service.default.svc.cluster.local:80/
+---
+apiVersion: monitoring.coreos.com/v1
+kind: Probe
+metadata:
+  name: probe-app1
+  namespace: monitoring
+  labels:
+    release: prometheus
+spec:
+  jobName: blackbox-http-app1
+  prober:
+    url: blackbox-exporter.monitoring.svc:9115
+  module: http_2xx
+  targets:
+    staticConfig:
+      static:
+      - http://app1-service.default.svc.cluster.local:80/
+---
+apiVersion: monitoring.coreos.com/v1
+kind: Probe
+metadata:
+  name: probe-fundo-rotativo
+  namespace: monitoring
+  labels:
+    release: prometheus
+spec:
+  jobName: blackbox-http-fundo-rotativo
+  prober:
+    url: blackbox-exporter.monitoring.svc:9115
+  module: http_2xx
+  targets:
+    staticConfig:
+      static:
+      - http://fundo-rotativo-service.default.svc.cluster.local:80/
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: app-http-availability-rules
+  namespace: monitoring
+  labels:
+    release: prometheus
+spec:
+  groups:
+  - name: app-http-availability
+    rules:
+    - alert: AppHttpDown
+      expr: probe_success{job=~"blackbox-http-.*"} == 0
+      for: 2m
+      labels:
+        severity: critical
+      annotations:
+        summary: "HTTP indisponível ({{ $labels.job }})"
+        description: "Proba HTTP falhou para {{ $labels.instance }} por 2m"
+    - alert: AppHttpLatencyHigh
+      expr: histogram_quantile(0.95, sum(rate(probe_http_duration_seconds_bucket{job=~"blackbox-http-.*"}[5m])) by (le, job)) > 1
+      for: 10m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Latência HTTP alta ({{ $labels.job }})"
+        description: "P95 > 1s por 10m"
