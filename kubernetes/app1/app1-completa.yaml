@@ -124,6 +124,23 @@ spec:
         image: nginx:latest
         ports:
         - containerPort: 80
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          successThreshold: 1
+          failureThreshold: 2
         resources:
           requests:
             memory: "64Mi"
@@ -139,6 +156,21 @@ spec:
           readOnly: true
       - name: php
         image: jpcaballeria/php-build:latest
+        livenessProbe:
+          tcpSocket:
+            port: 9000
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          tcpSocket:
+            port: 9000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          successThreshold: 1
+          failureThreshold: 2
         resources:
           requests:
             memory: "128Mi"

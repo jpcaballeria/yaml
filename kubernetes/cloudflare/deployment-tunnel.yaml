@@ -28,9 +28,12 @@ spec:
           limits:
             cpu: "500m"
             memory: "256Mi"
+        env:
+        - name: TUNNEL_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: cloudflared-token
+              key: token
+        command: ["/bin/sh","-c"]
         args:
-        - "tunnel"
-        - "--no-autoupdate"
-        - "run"
-        - "--token"
-        - "eyJhIjoiYmQ1MjlhOTJkMGZjYzQ4MTc5ZmRkZDE5YTZiYWViZTUiLCJ0IjoiNGU4NDU3NDMtYmU0Yy00NWQ0LWFlZmUtNjFiZTNmZGI0MTgxIiwicyI6IlkySTBZV0kwWWpJdE9XUTRPQzAwWXpCbUxUa3pOR1F0T1dNNU9UUXpZamRsWWpjMCJ9"
+        - 'exec cloudflared tunnel --no-autoupdate run --token "${TUNNEL_TOKEN}"'

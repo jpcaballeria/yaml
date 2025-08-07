@@ -31,7 +31,7 @@ spec:
         # dos seus bancos de dados. Corrigi o segundo nome para 'mysql-service'
         # que foi o que criamos para a aplicação curso-python.
         - name: PMA_HOSTS
-          value: "fundo-rotativo-mysql-service,app1-mysql-service,mysql-service-curso-python,fundorotativo.mysql.dbaas.com.br"
+          value: "fundo-rotativo-mysql-service,app1-mysql-service,curso-python-mysql-service,fundorotativo.mysql.dbaas.com.br"
         - name: PMA_PORT
           value: "3306" # Porta padrão do MySQL
 

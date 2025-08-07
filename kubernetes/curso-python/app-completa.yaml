@@ -7,7 +7,7 @@ metadata:
 type: Opaque
 stringData:
   MYSQL_ROOT_PASSWORD: "uH7wr5LKuthZuvnYI7oT"
-  MYSQL_DATABASE: "mysql-service-curso-python"
+  MYSQL_DATABASE: "curso-python-mysql-service"
   MYSQL_USER: "curso-python"
   MYSQL_PASSWORD: "uH7wr5LKuthZuvnYI7oT"
 
@@ -46,7 +46,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: mysql-deployment-curso-python
+  name: curso-python-mysql-deployment
 spec:
   replicas: 1
   selector:
@@ -90,7 +90,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: mysql-service-curso-python
+  name: curso-python-mysql-service
 spec:
   selector:
     app: mysql
@@ -133,6 +133,23 @@ spec:
         image: nginx:latest
         ports:
         - containerPort: 80
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          successThreshold: 1
+          failureThreshold: 2
         resources:
           requests:
             memory: "64Mi"
@@ -149,6 +166,21 @@ spec:
       - name: php
         # ⚠️ SUBSTITUA PELA SUA IMAGEM PHP CONSTRUÍDA E ENVIADA PARA UM REGISTRO ⚠️
         image: jpcaballeria/php-build:latest
+        livenessProbe:
+          tcpSocket:
+            port: 9000
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          tcpSocket:
+            port: 9000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          successThreshold: 1
+          failureThreshold: 2
         resources:
           requests:
             memory: "128Mi"
