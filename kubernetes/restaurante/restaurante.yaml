@@ -74,6 +74,7 @@ spec:
         volumeMounts:
         - name: mysql-persistent-storage
           mountPath: /var/lib/mysql
+      
       volumes:
       - name: mysql-persistent-storage
         persistentVolumeClaim:
@@ -125,16 +126,14 @@ spec:
         ports:
         - containerPort: 80
         livenessProbe:
-          httpGet:
-            path: /
+          tcpSocket:
             port: 80
           initialDelaySeconds: 20
           periodSeconds: 10
           timeoutSeconds: 5
           failureThreshold: 3
         readinessProbe:
-          httpGet:
-            path: /
+          tcpSocket:
             port: 80
           initialDelaySeconds: 5
           periodSeconds: 5
@@ -178,9 +177,7 @@ spec:
           limits:
             memory: "256Mi"
             cpu: "500m"
-        volumeMounts:
-        - name: app-code
-          mountPath: /var/www/html
+      
 
 ---
 # --- 7. Serviço para a Aplicação App1 ---

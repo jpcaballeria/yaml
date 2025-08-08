@@ -79,10 +79,30 @@ spec:
         volumeMounts:
         - name: mysql-persistent-storage
           mountPath: /var/lib/mysql
+      - name: mysqld-exporter
+        image: prom/mysqld-exporter:v0.15.1
+        args:
+        - --config.my-cnf=/etc/mysqld-exporter/.my.cnf
+        volumeMounts:
+        - name: mysqld-exporter-config
+          mountPath: /etc/mysqld-exporter
+        ports:
+        - name: mysql-metrics
+          containerPort: 9104
+        resources:
+          requests:
+            cpu: "20m"
+            memory: "32Mi"
+          limits:
+            cpu: "100m"
+            memory: "128Mi"
       volumes:
       - name: mysql-persistent-storage
         persistentVolumeClaim:
           claimName: mysql-pvc
+      - name: mysqld-exporter-config
+        secret:
+          secretName: mysql-exporter-config-curso-python
 
 ---
 # --- 5. Serviço para o MySQL ---
@@ -191,6 +211,7 @@ spec:
         volumeMounts:
         - name: app-code
           mountPath: /var/www/html
+      
 
 ---
 # --- 7. Serviço para a Aplicação ---

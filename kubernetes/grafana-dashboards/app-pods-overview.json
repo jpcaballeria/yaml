@@ -1,0 +1,33 @@
+{
+  "id": null,
+  "uid": "app-pods-overview",
+  "title": "Apps - Pods Overview",
+  "tags": ["apps", "kubernetes"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-6h", "to": "now" },
+  "templating": {
+    "list": [
+      {"type":"query","name":"namespace","datasource":{"type":"prometheus","uid":"prometheus"},"query":"label_values(kube_pod_info, namespace)","refresh":1},
+      {"type":"query","name":"app","datasource":{"type":"prometheus","uid":"prometheus"},"query":"label_values(kube_pod_labels{namespace=~\"$namespace\"}, label_app)","refresh":1,"includeAll":true,"multi":true}
+    ]
+  },
+  "panels": [
+    {"type":"timeseries","title":"CPU usage (cores) by pod","id":11,"datasource":{"type":"prometheus","uid":"prometheus"},
+      "targets":[{"expr":"rate(container_cpu_usage_seconds_total{namespace=~\"$namespace\",container!=\"\",image!=\"\"}[5m]) * on(pod,namespace) group_left(label_app) kube_pod_labels{namespace=~\"$namespace\",label_app=~\"$app\"}","legendFormat":"{{pod}}"}],
+      "fieldConfig":{"defaults":{"unit":"cores"}}
+    },
+    {"type":"timeseries","title":"Memory working set (MiB) by pod","id":12,"datasource":{"type":"prometheus","uid":"prometheus"},
+      "targets":[{"expr":"container_memory_working_set_bytes{namespace=~\"$namespace\",container!=\"\",image!=\"\"} * on(pod,namespace) group_left(label_app) kube_pod_labels{namespace=~\"$namespace\",label_app=~\"$app\"}","legendFormat":"{{pod}}"}],
+      "fieldConfig":{"defaults":{"unit":"MiB","decimals":0}}
+    },
+    {"type":"stat","title":"Restarts last 1h","id":13,"datasource":{"type":"prometheus","uid":"prometheus"},
+      "targets":[{"expr":"sum by (pod) (increase(kube_pod_container_status_restarts_total{namespace=~\"$namespace\"}[1h]) * on(pod,namespace) group_left(label_app) kube_pod_labels{namespace=~\"$namespace\",label_app=~\"$app\"})","legendFormat":"{{pod}}"}]
+    },
+    {"type":"timeseries","title":"Pod readiness","id":14,"datasource":{"type":"prometheus","uid":"prometheus"},
+      "targets":[{"expr":"kube_pod_status_ready{namespace=~\"$namespace\",condition=\"true\"} * on(pod,namespace) group_left(label_app) kube_pod_labels{namespace=~\"$namespace\",label_app=~\"$app\"}","legendFormat":"{{pod}}"}]
+    }
+  ]
+}

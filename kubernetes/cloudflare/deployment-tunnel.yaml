@@ -34,6 +34,9 @@ spec:
             secretKeyRef:
               name: cloudflared-token
               key: token
-        command: ["/bin/sh","-c"]
         args:
-        - 'exec cloudflared tunnel --no-autoupdate run --token "${TUNNEL_TOKEN}"'
+        - "tunnel"
+        - "--no-autoupdate"
+        - "run"
+        - "--token"
+        - "$(TUNNEL_TOKEN)"

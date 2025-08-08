@@ -1,0 +1,61 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: app1-web-exporters
+  namespace: monitoring
+  labels:
+    release: prometheus
+spec:
+  namespaceSelector:
+    matchNames: ["default"]
+  selector:
+    matchLabels:
+      app: app1
+  podMetricsEndpoints:
+  - port: nginx-metrics
+    path: /metrics
+    interval: 30s
+  - port: php-fpm-metrics
+    path: /metrics
+    interval: 30s
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: curso-python-web-exporters
+  namespace: monitoring
+  labels:
+    release: prometheus
+spec:
+  namespaceSelector:
+    matchNames: ["default"]
+  selector:
+    matchLabels:
+      app: curso-python
+  podMetricsEndpoints:
+  - port: nginx-metrics
+    path: /metrics
+    interval: 30s
+  - port: php-fpm-metrics
+    path: /metrics
+    interval: 30s
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: mysql-exporters
+  namespace: monitoring
+  labels:
+    release: prometheus
+spec:
+  namespaceSelector:
+    matchNames: ["default"]
+  selector:
+    matchExpressions:
+    - key: app
+      operator: In
+      values: ["mysql", "app1-mysql", "fundo-rotativo-mysql"]
+  podMetricsEndpoints:
+  - port: mysql-metrics
+    path: /metrics
+    interval: 30s

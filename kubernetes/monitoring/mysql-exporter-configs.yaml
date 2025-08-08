@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mysql-exporter-config-curso-python
+  namespace: default
+  labels:
+    app.kubernetes.io/name: mysqld-exporter
+    app.kubernetes.io/part-of: monitoring
+stringData:
+  .my.cnf: |
+    [client]
+    user=root
+    password=uH7wr5LKuthZuvnYI7oT
+    host=127.0.0.1
+    port=3306
