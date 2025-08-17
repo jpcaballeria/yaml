@@ -133,7 +133,7 @@ spec:
         # Volume para o código da aplicação (hostPath sincronizado)
         - name: app-code
           hostPath:
-            path: /home/saas/fundo-rotativo/app
+            path: /home/saas/fundo-rotativo-qa/app
             type: Directory
         # Volume para a config do Nginx (ConfigMap)
         - name: nginx-config-volume
