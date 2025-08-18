@@ -136,11 +136,14 @@ spec:
             path: /mnt/storage/saas/fundo-rotativo-qa/app
             type: Directory
         # Volume para a config do Nginx (ConfigMap)
-        - name: nginx-config-volume
-          configMap:
-            name: fundo-rotativo-nginx-config
-            defaultMode: 0644
-      
+        #- name: 
+        #  configMap:
+        #    name: fundo-rotativo-nginx-config
+        #    defaultMode: 0644
+        - name: nginx-config
+          hostPath:
+            path: /home/saas/curso-python/nginx.conf
+            type: File
       # --- CONTAINERS ---
       containers:
       - name: nginx
@@ -179,13 +182,10 @@ spec:
         - name: app-code
           mountPath: /var/www/html
           readOnly: true
-        #- name: nginx-config-volume
-        #  mountPath: /etc/nginx/conf.d/default.conf
-        #  subPath: nginx.conf
-        #  readOnly: true
-        - name: nginx-config-volume
-          hostPath:
-            path: /home/saas/curso-python/nginx.conf
+        - name: nginx-config
+          mountPath: /etc/nginx/conf.d/default.conf
+          subPath: nginx.conf
+          readOnly: true
       
       - name: php
         image: jpcaballeria/php-build:latest
