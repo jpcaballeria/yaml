@@ -25,7 +25,7 @@ spec:
   accessModes:
     - ReadWriteOnce
   hostPath:
-    path: "/mnt/data/mysql-fundo-rotativo"
+    path: "/mnt/storage/data/mysql-fundo-rotativo"
 
 ---
 # --- 3. Solicitação de Volume Persistente (fundo-rotativo) ---
@@ -133,7 +133,7 @@ spec:
         # Volume para o código da aplicação (hostPath sincronizado)
         - name: app-code
           hostPath:
-            path: /home/saas/fundo-rotativo-qa/app
+            path: /mnt/storage/saas/fundo-rotativo-qa/app
             type: Directory
         # Volume para a config do Nginx (ConfigMap)
         - name: nginx-config-volume
@@ -179,10 +179,13 @@ spec:
         - name: app-code
           mountPath: /var/www/html
           readOnly: true
+        #- name: nginx-config-volume
+        #  mountPath: /etc/nginx/conf.d/default.conf
+        #  subPath: nginx.conf
+        #  readOnly: true
         - name: nginx-config-volume
-          mountPath: /etc/nginx/conf.d/default.conf
-          subPath: nginx.conf
-          readOnly: true
+          hostPath:
+            path: /home/saas/curso-python/nginx.conf
       
       - name: php
         image: jpcaballeria/php-build:latest
