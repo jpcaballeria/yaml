@@ -21,7 +21,7 @@ spec:
   accessModes:
   - ReadWriteOnce
   hostPath:
-    path: /mnt/data/mysql
+    path: /mnt/storage/data/mysql
   storageClassName: manual
   nodeAffinity:
     required:
@@ -133,10 +133,10 @@ spec:
       volumes:
       - name: app-code
         hostPath:
-          path: /home/saas/aplicacao
+          path: /mnt/storage/saas/aplicacao-qa
       - name: nginx-config
         hostPath:
-          path: /home/saas/aplicacao/nginx.conf
+          path: /mnt/storage/saas/aplicacao-qa/nginx.conf
       containers:
       - name: nginx
         image: nginx:latest
